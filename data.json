@@ -1,0 +1,18 @@
+{
+  "entrate": [],
+  "spese": [],
+  "categorie": [
+    "Cibo",
+    "Casa", 
+    "Trasporti",
+    "Salute",
+    "Intrattenimento",
+    "Abbigliamento",
+    "Altro"
+  ],
+  "budget_mensile": 0.0,
+  "impostazioni": {
+    "valuta": "EUR",
+    "formato_data": "%Y-%m-%d"
+  }
+}
