@@ -6,7 +6,6 @@ import json
 
 app = Flask(__name__)
 finance_manager = FinanceManager()
-finance_manager.load_data()
 
 @app.route('/')
 def index():
