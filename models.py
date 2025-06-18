@@ -21,6 +21,7 @@ class FinanceManager:
                 "formato_data": "%Y-%m-%d"
             }
         }
+        self.load_data()
         
     def load_data(self) -> bool:
         """Carica i dati dal file JSON"""
