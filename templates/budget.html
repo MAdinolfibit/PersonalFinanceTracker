@@ -1,0 +1,314 @@
+{% extends "base.html" %}
+
+{% block title %}Budget - Finanze Personali{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <!-- Budget Overview Card -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>Budget Mensile
+                </h4>
+            </div>
+            <div class="card-body">
+                {% if budget_data.budget > 0 %}
+                    <div class="row mb-4">
+                        <div class="col-md-4 text-center">
+                            <h3 class="text-primary">{{ "%.2f"|format(budget_data.budget) }} €</h3>
+                            <small class="text-muted">Budget Impostato</small>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <h3 class="text-danger">{{ "%.2f"|format(budget_data.spent) }} €</h3>
+                            <small class="text-muted">Speso Questo Mese</small>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <h3 class="{{ 'text-success' if budget_data.remaining >= 0 else 'text-danger' }}">
+                                {{ "%.2f"|format(budget_data.remaining) }} €
+                            </h3>
+                            <small class="text-muted">
+                                {% if budget_data.remaining >= 0 %}
+                                    Rimanente
+                                {% else %}
+                                    Sforamento
+                                {% endif %}
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <!-- Progress Bar -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Utilizzo Budget</span>
+                            <span class="fw-bold">{{ "%.1f"|format(budget_data.percentage) }}%</span>
+                        </div>
+                        <div class="progress-custom">
+                            <div class="progress-bar-custom" 
+                                 style="width: {{ budget_data.percentage }}%; 
+                                        background: {% if budget_data.percentage <= 50 %}var(--success-color){% elif budget_data.percentage <= 80 %}var(--warning-color){% else %}var(--danger-color){% endif %}">
+                            </div>
+                        </div>
+                        <div class="mt-2 text-center">
+                            {% if budget_data.percentage <= 50 %}
+                                <small class="text-success">
+                                    <i class="fas fa-check-circle me-1"></i>Budget sotto controllo
+                                </small>
+                            {% elif budget_data.percentage <= 80 %}
+                                <small class="text-warning">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>Attenzione al budget
+                                </small>
+                            {% elif budget_data.percentage <= 100 %}
+                                <small class="text-danger">
+                                    <i class="fas fa-times-circle me-1"></i>Budget quasi esaurito
+                                </small>
+                            {% else %}
+                                <small class="text-danger">
+                                    <i class="fas fa-ban me-1"></i>Budget superato
+                                </small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Weekly Breakdown -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="text-center p-3 bg-light rounded">
+                                <h5>{{ "%.2f"|format(budget_data.budget / 4) }} €</h5>
+                                <small class="text-muted">Budget Settimanale Consigliato</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="text-center p-3 bg-light rounded">
+                                <h5>{{ "%.2f"|format(budget_data.budget / 30) }} €</h5>
+                                <small class="text-muted">Budget Giornaliero Consigliato</small>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-chart-pie fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Nessun Budget Impostato</h5>
+                        <p class="text-muted">Imposta un budget mensile per tenere sotto controllo le tue spese</p>
+                    </div>
+                {% endif %}
+                
+                <div class="text-center mt-4">
+                    <button class="btn btn-primary" id="setBudgetBtn">
+                        <i class="fas fa-edit me-2"></i>
+                        {% if budget_data.budget > 0 %}Modifica Budget{% else %}Imposta Budget{% endif %}
+                    </button>
+                    {% if budget_data.budget > 0 %}
+                        <button class="btn btn-outline-danger ms-2" id="removeBudgetBtn">
+                            <i class="fas fa-trash me-2"></i>Rimuovi Budget
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Budget Tips Card -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>Consigli per il Budget
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="d-flex mb-3">
+                            <div class="me-3">
+                                <i class="fas fa-piggy-bank fa-2x text-success"></i>
+                            </div>
+                            <div>
+                                <h6>Regola del 50/30/20</h6>
+                                <small class="text-muted">50% necessità, 30% desideri, 20% risparmi</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex mb-3">
+                            <div class="me-3">
+                                <i class="fas fa-chart-line fa-2x text-info"></i>
+                            </div>
+                            <div>
+                                <h6>Traccia le Spese</h6>
+                                <small class="text-muted">Monitora dove vanno i tuoi soldi</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex mb-3">
+                            <div class="me-3">
+                                <i class="fas fa-calendar-check fa-2x text-warning"></i>
+                            </div>
+                            <div>
+                                <h6>Rivedi Mensile</h6>
+                                <small class="text-muted">Aggiusta il budget ogni mese</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex mb-3">
+                            <div class="me-3">
+                                <i class="fas fa-shield-alt fa-2x text-primary"></i>
+                            </div>
+                            <div>
+                                <h6>Fondo Emergenza</h6>
+                                <small class="text-muted">Mantieni sempre una riserva</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Set Budget Modal -->
+<div class="modal fade" id="setBudgetModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Imposta Budget Mensile</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="budgetForm">
+                    <div class="mb-3">
+                        <label for="budgetAmount" class="form-label">Importo Budget (€)</label>
+                        <input type="number" class="form-control" id="budgetAmount" 
+                               step="0.01" min="0" placeholder="0.00" required
+                               value="{{ budget_data.budget if budget_data.budget > 0 else '' }}">
+                        <div class="form-text">Inserisci l'importo massimo che vuoi spendere questo mese</div>
+                    </div>
+                    
+                    <!-- Quick Budget Buttons -->
+                    <div class="mb-3">
+                        <label class="form-label">Budget Suggeriti</label>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <button type="button" class="btn btn-outline-primary btn-sm w-100 quick-budget" data-amount="500">500 €</button>
+                            </div>
+                            <div class="col-6">
+                                <button type="button" class="btn btn-outline-primary btn-sm w-100 quick-budget" data-amount="1000">1000 €</button>
+                            </div>
+                            <div class="col-6">
+                                <button type="button" class="btn btn-outline-primary btn-sm w-100 quick-budget" data-amount="1500">1500 €</button>
+                            </div>
+                            <div class="col-6">
+                                <button type="button" class="btn btn-outline-primary btn-sm w-100 quick-budget" data-amount="2000">2000 €</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                <button type="button" class="btn btn-primary" id="saveBudgetBtn">Salva Budget</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const setBudgetModal = new bootstrap.Modal(document.getElementById('setBudgetModal'));
+    
+    // Open set budget modal
+    document.getElementById('setBudgetBtn').addEventListener('click', function() {
+        setBudgetModal.show();
+    });
+    
+    // Quick budget buttons
+    document.querySelectorAll('.quick-budget').forEach(button => {
+        button.addEventListener('click', function() {
+            const amount = this.dataset.amount;
+            document.getElementById('budgetAmount').value = amount;
+        });
+    });
+    
+    // Save budget
+    document.getElementById('saveBudgetBtn').addEventListener('click', async function() {
+        const budgetAmount = document.getElementById('budgetAmount').value;
+        
+        if (!budgetAmount || parseFloat(budgetAmount) <= 0) {
+            showToast('Inserisci un importo valido', 'error');
+            return;
+        }
+        
+        const btn = this;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<span class="loading"></span> Salvando...';
+        btn.disabled = true;
+        
+        try {
+            const response = await fetch('/set_budget', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ budget: budgetAmount })
+            });
+            
+            const result = await handleResponse(response);
+            
+            if (result.success) {
+                setBudgetModal.hide();
+                // Reload page to show updated budget
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        } finally {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    });
+    
+    // Remove budget
+    const removeBudgetBtn = document.getElementById('removeBudgetBtn');
+    if (removeBudgetBtn) {
+        removeBudgetBtn.addEventListener('click', async function() {
+            if (!confirm('Sei sicuro di voler rimuovere il budget mensile?')) {
+                return;
+            }
+            
+            const btn = this;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span class="loading"></span> Rimuovendo...';
+            btn.disabled = true;
+            
+            try {
+                const response = await fetch('/set_budget', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ budget: '0' })
+                });
+                
+                const result = await handleResponse(response);
+                
+                if (result.success) {
+                    // Reload page to show updated budget
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

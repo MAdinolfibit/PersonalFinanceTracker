@@ -1,0 +1,389 @@
+{% extends "base.html" %}
+
+{% block title %}Categorie - Finanze Personali{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">
+                    <i class="fas fa-tags me-2"></i>Gestione Categorie
+                </h4>
+                <button class="btn btn-primary" id="addCategoryBtn">
+                    <i class="fas fa-plus me-1"></i>Nuova Categoria
+                </button>
+            </div>
+            <div class="card-body">
+                {% if categories %}
+                    <div class="row" id="categoriesList">
+                        {% for category in categories %}
+                        <div class="col-md-6 col-lg-4 mb-3" data-category="{{ category }}">
+                            <div class="card h-100">
+                                <div class="card-body d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-0">{{ category }}</h6>
+                                        <small class="text-muted">Categoria spesa</small>
+                                    </div>
+                                    <div class="dropdown">
+                                        <button class="btn btn-outline-secondary btn-sm dropdown-toggle" 
+                                                type="button" data-bs-toggle="dropdown">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li>
+                                                <button class="dropdown-item text-danger remove-category" 
+                                                        data-category="{{ category }}">
+                                                    <i class="fas fa-trash me-2"></i>Rimuovi
+                                                </button>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-tags fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Nessuna Categoria</h5>
+                        <p class="text-muted">Crea la tua prima categoria per organizzare le spese</p>
+                        <button class="btn btn-primary" id="addFirstCategoryBtn">
+                            <i class="fas fa-plus me-1"></i>Prima Categoria
+                        </button>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Suggested Categories Card -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>Categorie Suggerite
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-3">Aggiungi rapidamente queste categorie comuni:</p>
+                <div class="row g-2" id="suggestedCategories">
+                    <div class="col-6 col-md-4 col-lg-3">
+                        <button class="btn btn-outline-primary btn-sm w-100 add-suggested" data-category="Alimentari">
+                            <i class="fas fa-shopping-cart me-1"></i>Alimentari
+                        </button>
+                    </div>
+                    <div class="col-6 col-md-4 col-lg-3">
+                        <button class="btn btn-outline-primary btn-sm w-100 add-suggested" data-category="Benzina">
+                            <i class="fas fa-gas-pump me-1"></i>Benzina
+                        </button>
+                    </div>
+                    <div class="col-6 col-md-4 col-lg-3">
+                        <button class="btn btn-outline-primary btn-sm w-100 add-suggested" data-category="Ristoranti">
+                            <i class="fas fa-utensils me-1"></i>Ristoranti
+                        </button>
+                    </div>
+                    <div class="col-6 col-md-4 col-lg-3">
+                        <button class="btn btn-outline-primary btn-sm w-100 add-suggested" data-category="Bollette">
+                            <i class="fas fa-file-invoice me-1"></i>Bollette
+                        </button>
+                    </div>
+                    <div class="col-6 col-md-4 col-lg-3">
+                        <button class="btn btn-outline-primary btn-sm w-100 add-suggested" data-category="Palestra">
+                            <i class="fas fa-dumbbell me-1"></i>Palestra
+                        </button>
+                    </div>
+                    <div class="col-6 col-md-4 col-lg-3">
+                        <button class="btn btn-outline-primary btn-sm w-100 add-suggested" data-category="Shopping">
+                            <i class="fas fa-shopping-bag me-1"></i>Shopping
+                        </button>
+                    </div>
+                    <div class="col-6 col-md-4 col-lg-3">
+                        <button class="btn btn-outline-primary btn-sm w-100 add-suggested" data-category="Farmacia">
+                            <i class="fas fa-pills me-1"></i>Farmacia
+                        </button>
+                    </div>
+                    <div class="col-6 col-md-4 col-lg-3">
+                        <button class="btn btn-outline-primary btn-sm w-100 add-suggested" data-category="Cinema">
+                            <i class="fas fa-film me-1"></i>Cinema
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Category Modal -->
+<div class="modal fade" id="addCategoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nuova Categoria</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="categoryForm">
+                    <div class="mb-3">
+                        <label for="categoryName" class="form-label">Nome Categoria</label>
+                        <input type="text" class="form-control" id="categoryName" 
+                               placeholder="Es: Intrattenimento, Sport, Viaggi..." required>
+                        <div class="form-text">Inserisci un nome descrittivo per la categoria</div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                <button type="button" class="btn btn-primary" id="saveCategoryBtn">
+                    <i class="fas fa-save me-1"></i>Salva Categoria
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Remove Category Confirmation Modal -->
+<div class="modal fade" id="removeCategoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Conferma Rimozione</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Sei sicuro di voler rimuovere la categoria <strong id="categoryToRemove"></strong>?</p>
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Le spese esistenti manterranno questa categoria, ma non sarà più disponibile per nuove spese.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                <button type="button" class="btn btn-danger" id="confirmRemoveBtn">
+                    <i class="fas fa-trash me-1"></i>Rimuovi
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const addCategoryModal = new bootstrap.Modal(document.getElementById('addCategoryModal'));
+    const removeCategoryModal = new bootstrap.Modal(document.getElementById('removeCategoryModal'));
+    let categoryToRemove = '';
+    
+    // Open add category modal
+    document.getElementById('addCategoryBtn').addEventListener('click', function() {
+        addCategoryModal.show();
+    });
+    
+    // Handle add first category button if present
+    const addFirstCategoryBtn = document.getElementById('addFirstCategoryBtn');
+    if (addFirstCategoryBtn) {
+        addFirstCategoryBtn.addEventListener('click', function() {
+            addCategoryModal.show();
+        });
+    }
+    
+    // Auto-focus on category name input when modal opens
+    document.getElementById('addCategoryModal').addEventListener('shown.bs.modal', function() {
+        document.getElementById('categoryName').focus();
+    });
+    
+    // Handle Enter key in category name input
+    document.getElementById('categoryName').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            document.getElementById('saveCategoryBtn').click();
+        }
+    });
+    
+    // Save new category
+    document.getElementById('saveCategoryBtn').addEventListener('click', async function() {
+        const categoryName = document.getElementById('categoryName').value.trim();
+        
+        if (!categoryName) {
+            showToast('Nome categoria obbligatorio', 'error');
+            return;
+        }
+        
+        const btn = this;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<span class="loading"></span> Salvando...';
+        btn.disabled = true;
+        
+        try {
+            const response = await fetch('/add_category', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ categoria: categoryName })
+            });
+            
+            const result = await handleResponse(response);
+            
+            if (result.success) {
+                // Add new category to the list
+                addCategoryToList(categoryName);
+                
+                // Clear form and close modal
+                document.getElementById('categoryName').value = '';
+                addCategoryModal.hide();
+                
+                // Remove from suggested categories if it was there
+                document.querySelectorAll('.add-suggested').forEach(btn => {
+                    if (btn.dataset.category === categoryName) {
+                        btn.style.display = 'none';
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        } finally {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    });
+    
+    // Add suggested categories
+    document.querySelectorAll('.add-suggested').forEach(button => {
+        button.addEventListener('click', async function() {
+            const categoryName = this.dataset.category;
+            
+            const btn = this;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span class="loading"></span>';
+            btn.disabled = true;
+            
+            try {
+                const response = await fetch('/add_category', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ categoria: categoryName })
+                });
+                
+                const result = await handleResponse(response);
+                
+                if (result.success) {
+                    // Add new category to the list
+                    addCategoryToList(categoryName);
+                    
+                    // Hide this suggested button
+                    btn.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        });
+    });
+    
+    // Remove category handlers
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-category')) {
+            categoryToRemove = e.target.dataset.category;
+            document.getElementById('categoryToRemove').textContent = categoryToRemove;
+            removeCategoryModal.show();
+        }
+    });
+    
+    // Confirm remove category
+    document.getElementById('confirmRemoveBtn').addEventListener('click', async function() {
+        const btn = this;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<span class="loading"></span> Rimuovendo...';
+        btn.disabled = true;
+        
+        try {
+            const response = await fetch('/remove_category', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ categoria: categoryToRemove })
+            });
+            
+            const result = await handleResponse(response);
+            
+            if (result.success) {
+                // Remove category from the list
+                const categoryElement = document.querySelector(`[data-category="${categoryToRemove}"]`);
+                if (categoryElement) {
+                    categoryElement.remove();
+                }
+                
+                // Show corresponding suggested button if it exists
+                document.querySelectorAll('.add-suggested').forEach(btn => {
+                    if (btn.dataset.category === categoryToRemove) {
+                        btn.style.display = 'block';
+                    }
+                });
+                
+                removeCategoryModal.hide();
+                
+                // Check if no categories left
+                const categoriesList = document.getElementById('categoriesList');
+                if (categoriesList && categoriesList.children.length === 0) {
+                    location.reload();
+                }
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        } finally {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    });
+    
+    // Helper function to add category to list
+    function addCategoryToList(categoryName) {
+        const categoriesList = document.getElementById('categoriesList');
+        
+        // If no categories list exists, reload the page to show the new structure
+        if (!categoriesList) {
+            location.reload();
+            return;
+        }
+        
+        const categoryHtml = `
+            <div class="col-md-6 col-lg-4 mb-3" data-category="${categoryName}">
+                <div class="card h-100">
+                    <div class="card-body d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">${categoryName}</h6>
+                            <small class="text-muted">Categoria spesa</small>
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn btn-outline-secondary btn-sm dropdown-toggle" 
+                                    type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <button class="dropdown-item text-danger remove-category" 
+                                            data-category="${categoryName}">
+                                        <i class="fas fa-trash me-2"></i>Rimuovi
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        categoriesList.insertAdjacentHTML('beforeend', categoryHtml);
+    }
+});
+</script>
+{% endblock %}

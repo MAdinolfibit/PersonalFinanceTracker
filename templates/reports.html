@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+
+{% block title %}Report - Finanze Personali{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Monthly Summary -->
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>Report Mensile
+                </h4>
+                <div class="d-flex align-items-center">
+                    <label for="monthSelect" class="form-label me-2 mb-0">Mese:</label>
+                    <select class="form-control" id="monthSelect" style="width: auto;">
+                        <option value="{{ current_month }}">{{ current_month }} (Corrente)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-3 text-center">
+                        <h3 class="text-success">{{ "%.2f"|format(report.entrate_totali) }} €</h3>
+                        <small class="text-muted">Entrate del Mese</small>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <h3 class="text-danger">{{ "%.2f"|format(report.spese_totali) }} €</h3>
+                        <small class="text-muted">Spese del Mese</small>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <h3 class="{{ 'text-success' if report.saldo >= 0 else 'text-danger' }}">
+                            {{ "%.2f"|format(report.saldo) }} €
+                        </h3>
+                        <small class="text-muted">Saldo del Mese</small>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <h3 class="text-info">{{ report.numero_transazioni }}</h3>
+                        <small class="text-muted">Transazioni Totali</small>
+                    </div>
+                </div>
+                
+                {% if report.budget_mensile > 0 %}
+                <div class="alert alert-info">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>Budget Mensile:</strong> {{ "%.2f"|format(report.budget_mensile) }} €
+                        </div>
+                        <div>
+                            {% set budget_usage = (report.spese_totali / report.budget_mensile * 100) if report.budget_mensile > 0 else 0 %}
+                            <span class="badge bg-{{ 'success' if budget_usage <= 80 else 'warning' if budget_usage <= 100 else 'danger' }}">
+                                {{ "%.1f"|format(budget_usage) }}% utilizzato
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Charts Row -->
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>Spese per Categoria
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if categories_data %}
+                    <canvas id="categoryChart" height="300"></canvas>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-chart-pie fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">Nessuna spesa per questo mese</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>Confronto Entrate vs Spese
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="comparisonChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Category Breakdown -->
+    {% if categories_data %}
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-list me-2"></i>Dettaglio per Categoria
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                {% for category in categories_data %}
+                <div class="d-flex align-items-center p-3 border-bottom">
+                    <div class="me-3">
+                        <div class="category-color-indicator" 
+                             style="width: 20px; height: 20px; border-radius: 50%; background: hsl({{ loop.index0 * 137.5 % 360 }}, 70%, 60%);"></div>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">{{ category.name }}</h6>
+                            <span class="fw-bold">{{ "%.2f"|format(category.amount) }} €</span>
+                        </div>
+                        <div class="mt-2">
+                            <div class="progress-custom">
+                                <div class="progress-bar-custom" 
+                                     style="width: {{ category.percentage }}%; background: hsl({{ loop.index0 * 137.5 % 360 }}, 70%, 60%);"></div>
+                            </div>
+                            <small class="text-muted">{{ "%.1f"|format(category.percentage) }}% del totale spese</small>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Category Chart (Pie Chart)
+    {% if categories_data %}
+    const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+    const categoryData = {
+        labels: [{% for category in categories_data %}'{{ category.name }}'{% if not loop.last %},{% endif %}{% endfor %}],
+        datasets: [{
+            data: [{% for category in categories_data %}{{ category.amount }}{% if not loop.last %},{% endif %}{% endfor %}],
+            backgroundColor: [
+                {% for category in categories_data %}
+                'hsl({{ loop.index0 * 137.5 % 360 }}, 70%, 60%)'{% if not loop.last %},{% endif %}
+                {% endfor %}
+            ],
+            borderWidth: 2,
+            borderColor: '#fff'
+        }]
+    };
+    
+    new Chart(categoryCtx, {
+        type: 'doughnut',
+        data: categoryData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = ((context.raw / total) * 100).toFixed(1);
+                            return context.label + ': ' + context.raw.toFixed(2) + '€ (' + percentage + '%)';
+                        }
+                    }
+                }
+            }
+        }
+    });
+    {% endif %}
+    
+    // Comparison Chart (Bar Chart)
+    const comparisonCtx = document.getElementById('comparisonChart').getContext('2d');
+    const comparisonData = {
+        labels: ['{{ current_month }}'],
+        datasets: [{
+            label: 'Entrate',
+            data: [{{ report.entrate_totali }}],
+            backgroundColor: 'rgba(16, 185, 129, 0.8)',
+            borderColor: 'rgba(16, 185, 129, 1)',
+            borderWidth: 2
+        }, {
+            label: 'Spese',
+            data: [{{ report.spese_totali }}],
+            backgroundColor: 'rgba(239, 68, 68, 0.8)',
+            borderColor: 'rgba(239, 68, 68, 1)',
+            borderWidth: 2
+        }]
+    };
+    
+    new Chart(comparisonCtx, {
+        type: 'bar',
+        data: comparisonData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': ' + context.raw.toFixed(2) + '€';
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return value.toFixed(0) + '€';
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    // Month selector functionality (placeholder for future enhancement)
+    document.getElementById('monthSelect').addEventListener('change', function() {
+        // In a full implementation, this would reload the report for the selected month
+        const selectedMonth = this.value;
+        showToast('Funzionalità in sviluppo: selezione mese ' + selectedMonth, 'info');
+    });
+});
+</script>
+{% endblock %}

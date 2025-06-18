@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+
+{% block title %}Aggiungi Spesa - Finanze Personali{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-minus-circle text-danger me-2"></i>Aggiungi Spesa
+                </h4>
+            </div>
+            <div class="card-body">
+                <form id="expenseForm">
+                    <div class="mb-3">
+                        <label for="descrizione" class="form-label">Descrizione</label>
+                        <input type="text" class="form-control" id="descrizione" name="descrizione" 
+                               placeholder="Es: Spesa alimentare, Bolletta, Benzina..." required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="importo" class="form-label">Importo (€)</label>
+                        <input type="number" class="form-control" id="importo" name="importo" 
+                               step="0.01" min="0" placeholder="0.00" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="categoria" class="form-label">Categoria</label>
+                        <select class="form-control" id="categoria" name="categoria" required>
+                            <option value="">Seleziona categoria...</option>
+                            {% for category in categories %}
+                            <option value="{{ category }}">{{ category }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="mt-2">
+                            <button type="button" class="btn btn-outline-primary btn-sm" id="addCategoryBtn">
+                                <i class="fas fa-plus me-1"></i>Nuova Categoria
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="data" class="form-label">Data</label>
+                        <input type="date" class="form-control" id="data" name="data" required>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-danger" id="submitBtn">
+                            <i class="fas fa-save me-2"></i>Salva Spesa
+                        </button>
+                        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Annulla
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Quick Amount Buttons -->
+        <div class="card mt-3">
+            <div class="card-body">
+                <h6 class="card-title">Importi Rapidi</h6>
+                <div class="row g-2">
+                    <div class="col-6 col-sm-3">
+                        <button type="button" class="btn btn-outline-danger btn-sm w-100 quick-amount" data-amount="10">10 €</button>
+                    </div>
+                    <div class="col-6 col-sm-3">
+                        <button type="button" class="btn btn-outline-danger btn-sm w-100 quick-amount" data-amount="25">25 €</button>
+                    </div>
+                    <div class="col-6 col-sm-3">
+                        <button type="button" class="btn btn-outline-danger btn-sm w-100 quick-amount" data-amount="50">50 €</button>
+                    </div>
+                    <div class="col-6 col-sm-3">
+                        <button type="button" class="btn btn-outline-danger btn-sm w-100 quick-amount" data-amount="100">100 €</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Category Shortcuts -->
+        <div class="card mt-3">
+            <div class="card-body">
+                <h6 class="card-title">Categorie Rapide</h6>
+                <div class="row g-2">
+                    {% for category in categories[:8] %}
+                    <div class="col-6 col-sm-4 col-md-3">
+                        <button type="button" class="btn btn-outline-primary btn-sm w-100 quick-category" 
+                                data-category="{{ category }}">{{ category }}</button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Category Modal -->
+<div class="modal fade" id="addCategoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nuova Categoria</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="newCategoryName" class="form-label">Nome Categoria</label>
+                    <input type="text" class="form-control" id="newCategoryName" 
+                           placeholder="Es: Intrattenimento, Sport...">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                <button type="button" class="btn btn-primary" id="saveCategoryBtn">Salva</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Set today's date as default
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('data').value = today;
+    
+    // Quick amount buttons
+    document.querySelectorAll('.quick-amount').forEach(button => {
+        button.addEventListener('click', function() {
+            const amount = this.dataset.amount;
+            document.getElementById('importo').value = amount;
+        });
+    });
+    
+    // Quick category buttons
+    document.querySelectorAll('.quick-category').forEach(button => {
+        button.addEventListener('click', function() {
+            const category = this.dataset.category;
+            document.getElementById('categoria').value = category;
+        });
+    });
+    
+    // Add category modal
+    const addCategoryModal = new bootstrap.Modal(document.getElementById('addCategoryModal'));
+    
+    document.getElementById('addCategoryBtn').addEventListener('click', function() {
+        addCategoryModal.show();
+    });
+    
+    // Save new category
+    document.getElementById('saveCategoryBtn').addEventListener('click', async function() {
+        const categoryName = document.getElementById('newCategoryName').value.trim();
+        
+        if (!categoryName) {
+            showToast('Nome categoria obbligatorio', 'error');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/add_category', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ categoria: categoryName })
+            });
+            
+            const result = await handleResponse(response);
+            
+            if (result.success) {
+                // Add new option to select
+                const select = document.getElementById('categoria');
+                const option = new Option(categoryName, categoryName);
+                select.add(option);
+                select.value = categoryName;
+                
+                // Clear modal and close
+                document.getElementById('newCategoryName').value = '';
+                addCategoryModal.hide();
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    });
+    
+    // Form submission
+    document.getElementById('expenseForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const submitBtn = document.getElementById('submitBtn');
+        const originalText = submitBtn.innerHTML;
+        
+        // Show loading state
+        submitBtn.innerHTML = '<span class="loading"></span> Salvando...';
+        submitBtn.disabled = true;
+        
+        try {
+            const formData = new FormData(this);
+            const data = {
+                descrizione: formData.get('descrizione'),
+                importo: formData.get('importo'),
+                categoria: formData.get('categoria'),
+                data: formData.get('data')
+            };
+            
+            const response = await fetch('/add_expense', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+            
+            const result = await handleResponse(response);
+            
+            if (result.success) {
+                // Reset form
+                this.reset();
+                document.getElementById('data').value = today;
+                
+                // Redirect to home after a short delay
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 1500);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        } finally {
+            // Restore button state
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }
+    });
+    
+    // Auto-focus on description field
+    document.getElementById('descrizione').focus();
+});
+</script>
+{% endblock %}

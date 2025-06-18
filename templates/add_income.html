@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}Aggiungi Entrata - Finanze Personali{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-plus-circle text-success me-2"></i>Aggiungi Entrata
+                </h4>
+            </div>
+            <div class="card-body">
+                <form id="incomeForm">
+                    <div class="mb-3">
+                        <label for="descrizione" class="form-label">Descrizione</label>
+                        <input type="text" class="form-control" id="descrizione" name="descrizione" 
+                               placeholder="Es: Stipendio, Regalo, Freelance..." required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="importo" class="form-label">Importo (€)</label>
+                        <input type="number" class="form-control" id="importo" name="importo" 
+                               step="0.01" min="0" placeholder="0.00" required>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="data" class="form-label">Data</label>
+                        <input type="date" class="form-control" id="data" name="data" required>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success" id="submitBtn">
+                            <i class="fas fa-save me-2"></i>Salva Entrata
+                        </button>
+                        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Annulla
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Quick Amount Buttons -->
+        <div class="card mt-3">
+            <div class="card-body">
+                <h6 class="card-title">Importi Rapidi</h6>
+                <div class="row g-2">
+                    <div class="col-6 col-sm-3">
+                        <button type="button" class="btn btn-outline-primary btn-sm w-100 quick-amount" data-amount="50">50 €</button>
+                    </div>
+                    <div class="col-6 col-sm-3">
+                        <button type="button" class="btn btn-outline-primary btn-sm w-100 quick-amount" data-amount="100">100 €</button>
+                    </div>
+                    <div class="col-6 col-sm-3">
+                        <button type="button" class="btn btn-outline-primary btn-sm w-100 quick-amount" data-amount="500">500 €</button>
+                    </div>
+                    <div class="col-6 col-sm-3">
+                        <button type="button" class="btn btn-outline-primary btn-sm w-100 quick-amount" data-amount="1000">1000 €</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Set today's date as default
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('data').value = today;
+    
+    // Quick amount buttons
+    document.querySelectorAll('.quick-amount').forEach(button => {
+        button.addEventListener('click', function() {
+            const amount = this.dataset.amount;
+            document.getElementById('importo').value = amount;
+        });
+    });
+    
+    // Form submission
+    document.getElementById('incomeForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const submitBtn = document.getElementById('submitBtn');
+        const originalText = submitBtn.innerHTML;
+        
+        // Show loading state
+        submitBtn.innerHTML = '<span class="loading"></span> Salvando...';
+        submitBtn.disabled = true;
+        
+        try {
+            const formData = new FormData(this);
+            const data = {
+                descrizione: formData.get('descrizione'),
+                importo: formData.get('importo'),
+                data: formData.get('data')
+            };
+            
+            const response = await fetch('/add_income', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+            
+            const result = await handleResponse(response);
+            
+            if (result.success) {
+                // Reset form
+                this.reset();
+                document.getElementById('data').value = today;
+                
+                // Redirect to home after a short delay
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 1500);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        } finally {
+            // Restore button state
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }
+    });
+    
+    // Auto-focus on description field
+    document.getElementById('descrizione').focus();
+});
+</script>
+{% endblock %}
