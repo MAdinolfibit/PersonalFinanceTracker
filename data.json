@@ -1,14 +1,51 @@
 {
-  "entrate": [],
-  "spese": [],
+  "entrate": [
+    {
+      "id": "2025-06-18T09:49:41.204422_0",
+      "descrizione": "stipendio",
+      "importo": 1500.0,
+      "data": "2025-06-18",
+      "tipo": "entrata",
+      "timestamp": "2025-06-18T09:49:41.204431"
+    },
+    {
+      "id": "2025-06-18T09:49:59.517297_1",
+      "descrizione": "droga per delfino",
+      "importo": 100.0,
+      "data": "2025-06-18",
+      "tipo": "entrata",
+      "timestamp": "2025-06-18T09:49:59.517304"
+    }
+  ],
+  "spese": [
+    {
+      "id": "2025-06-18T09:50:22.669992_2",
+      "descrizione": "cartine rizla+",
+      "importo": 5.0,
+      "data": "2025-06-18",
+      "categoria": "Salute",
+      "tipo": "spesa",
+      "timestamp": "2025-06-18T09:50:22.669998"
+    },
+    {
+      "id": "2025-06-18T09:51:04.525702_3",
+      "descrizione": "benzina e bollette",
+      "importo": 550.0,
+      "data": "2025-06-18",
+      "categoria": "Trasporti",
+      "tipo": "spesa",
+      "timestamp": "2025-06-18T09:51:04.525708"
+    }
+  ],
   "categorie": [
     "Cibo",
-    "Casa", 
+    "Casa",
     "Trasporti",
     "Salute",
     "Intrattenimento",
     "Abbigliamento",
-    "Altro"
+    "Altro",
+    "Benzina"
   ],
   "budget_mensile": 0.0,
   "impostazioni": {
